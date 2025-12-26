@@ -13,3 +13,48 @@
 ---
 
 `leaker` is a leak discovery tool that returns valid credential leaks for emails, using passive online sources. 
+
+## Features
+
+Available sources: `proxynova`
+
+## Usage
+
+```shell
+leaker -h
+```
+
+Here is a help menu for the tool:
+
+```yaml
+Usage: leaker <targets> [flags]
+
+leaker is a leak discovery tool that returns valid credential leaks for emails, using passive online sources.
+
+Arguments:
+  <targets>    Target email or file with emails.
+
+Flags:
+  -h, --help     Show context-sensitive help.
+  -q, --quiet    Don't print leaker's beautiful banner.
+```
+
+## Installation
+
+`leaker` requires **go1.25** to install successfully.
+
+```shell
+go install -v github.com/vflame6/leaker@latest
+```
+
+Compiled versions are available on [Release Binaries](https://github.com/vflame6/leaker/releases) page.
+
+To Build:
+
+```
+go build -o leaker main.go
+```
+
+## Contributing
+
+Feel free to open an issue if something does not work, or if you have any issues. New ideas to improve the tool are much appreciated.
