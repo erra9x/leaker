@@ -44,6 +44,7 @@ Flags:
   -o, --output=STRING                            file to write output to
   --overwrite                                force overwrite of existing file
   -p, --provider-config="provider-config.yml"    provider config file
+  --proxy=STRING                             http proxy to use with leaker
   -A, --user-agent=STRING                        custom user agent
   --version                                  print version of leaker
   -q, --quiet                                    suppress output, print results only
