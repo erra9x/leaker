@@ -92,3 +92,9 @@ func (s *ProxyNova) NeedsKey() bool {
 func (s *ProxyNova) AddApiKeys(_ []string) {
 	// no key needed
 }
+
+func (s *ProxyNova) RateLimit() int {
+	// from https://www.proxynova.com/tools/comb/
+	// "You are limited to about 100 requests per minute."
+	return 90
+}

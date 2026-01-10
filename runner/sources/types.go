@@ -16,6 +16,9 @@ type Source interface {
 	NeedsKey() bool
 
 	AddApiKeys([]string)
+
+	// RateLimit returns how many requests per second can be done to the source
+	RateLimit() int
 }
 
 type Result struct {

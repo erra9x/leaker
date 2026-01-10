@@ -159,3 +159,10 @@ func (s *LeakCheck) NeedsKey() bool {
 func (s *LeakCheck) AddApiKeys(keys []string) {
 	s.apiKeys = keys
 }
+
+func (s *LeakCheck) RateLimit() int {
+	// from https://wiki.leakcheck.io/en/api/api-v2-pro
+	// "By default, the LeakCheck Pro API is limited to 3 requests per second on any plan.
+	// You can increase this limit in the settings."
+	return 3
+}
