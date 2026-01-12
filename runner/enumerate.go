@@ -13,7 +13,7 @@ import (
 func (r *Runner) EnumerateSingleEmail(email string, timeout time.Duration, writers []io.Writer) error {
 	var err error
 
-	logger.Infof("Enumerating leaks for email %s", email)
+	logger.Infof("Enumerating leaks for email: %s", email)
 	results := make(chan sources.Result)
 
 	wg := &sync.WaitGroup{}

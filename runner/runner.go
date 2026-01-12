@@ -24,11 +24,15 @@ func NewRunner(options *Options) (*Runner, error) {
 
 	// --list-sources flag
 	if options.ListSources {
+		logger.Debug("Listing all available sources")
 		listSources(options)
 		os.Exit(0)
 	}
 
 	if exists := utils.FileExists(defaultProviderConfigLocation); !exists {
+		logger.Debugf("No default provider config file found: %s", defaultProviderConfigLocation)
+		logger.Debugf("Creating new default provider config at %s", defaultProviderConfigLocation)
+
 		if err := createProviderConfigYAML(defaultProviderConfigLocation); err != nil {
 			logger.Errorf("Could not create provider config file: %s\n", err)
 		}
@@ -65,6 +69,7 @@ func NewRunner(options *Options) (*Runner, error) {
 func (r *Runner) configureSources() {
 	// check if all sources are specified
 	if slices.Contains(r.options.Sources, "all") {
+		logger.Debug("Configuring leaker to use all available sources")
 		// add all sources
 		for _, source := range AllSources {
 			ScanSources = append(ScanSources, source)
@@ -78,6 +83,7 @@ func (r *Runner) configureSources() {
 	}
 
 	// add selected sources
+	logger.Debug("Configuring leaker to use specified sources: %s", strings.Join(r.options.Sources, ", "))
 	for _, source := range AllSources {
 		if slices.Contains(r.options.Sources, strings.ToLower(source.Name())) {
 			ScanSources = append(ScanSources, source)
@@ -117,6 +123,13 @@ func (r *Runner) RunEnumeration() error {
 
 func (r *Runner) EnumerateMultipleEmails(reader io.Reader, writers []io.Writer) error {
 	var err error
+
+	if !r.options.NoFilter {
+		logger.Debugf("Results filtering is enabled, leaker will filter results by matching every result to inputted email.")
+	} else {
+		logger.Debugf("Results filtering is disabled, leaker will not filter any result.")
+	}
+
 	scanner := bufio.NewScanner(reader)
 	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 
@@ -125,6 +138,7 @@ func (r *Runner) EnumerateMultipleEmails(reader io.Reader, writers []io.Writer) 
 
 		// check if valid email
 		if email == "" || !emailRegex.MatchString(email) {
+			logger.Infof("Can't parse input as email, skipping: %s", email)
 			continue
 		}
 
