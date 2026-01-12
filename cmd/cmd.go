@@ -15,7 +15,7 @@ var CLI struct {
 	Sources []string `short:"s" default:"all" help:"Specific sources to use for enumeration (default all). Use --list-sources to display all available sources."`
 
 	// OPTIMIZATION
-	Timeout     time.Duration `help:"Seconds to wait before timing out (default 10s)" default:"10s"`
+	Timeout     time.Duration `help:"Seconds to wait before timing out (default 30s)" default:"30s"`
 	NoRateLimit bool          `short:"N" help:"Disable rate limiting (DANGER)"`
 
 	// OUTPUT
