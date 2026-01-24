@@ -74,6 +74,12 @@ To Build:
 go build -o leaker main.go
 ```
 
+Build with Docker:
+
+```shell
+docker build -t leaker . 
+```
+
 ### Post-installation
 
 `leaker` can be used right after the installation, however many sources required API keys to work. View an example configuration file here: https://github.com/vflame6/leaker/blob/main/static/provider-config.yml
