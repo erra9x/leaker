@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
+	"github.com/vflame6/leaker/runner/sources"
 	"github.com/vflame6/leaker/utils"
 	"io"
 	"os"
@@ -147,18 +148,30 @@ func (r *Runner) EnumerateMultipleEmails(reader io.Reader, writers []io.Writer) 
 
 	scanner := bufio.NewScanner(reader)
 	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+	domainRegex := regexp.MustCompile(`^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`)
 
 	for scanner.Scan() {
-		email := strings.ToLower(strings.TrimSpace(scanner.Text()))
+		var scanType sources.ScanType
 
-		// check if valid email
-		if email == "" || !emailRegex.MatchString(email) {
-			logger.Infof("Can't parse input as email, skipping: %s", email)
+		line := strings.ToLower(strings.TrimSpace(scanner.Text()))
+
+		// check if valid email or domain
+		isEmail := emailRegex.MatchString(line)
+		isDomain := domainRegex.MatchString(line)
+
+		if line == "" || (!isEmail && !isDomain) {
+			logger.Infof("Can't parse input as line, skipping: %s", line)
 			continue
 		}
 
-		// run enumeration for a single email
-		err = r.EnumerateSingleEmail(email, r.options.Timeout, writers)
+		if isEmail {
+			scanType = 0
+		} else {
+			scanType = 1
+		}
+
+		// run enumeration for a single line
+		err = r.EnumerateSingleEmailOrDomain(line, scanType, r.options.Timeout, writers)
 	}
 	if err != nil {
 		return err

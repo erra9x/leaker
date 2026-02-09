@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-func (r *Runner) EnumerateSingleEmail(email string, timeout time.Duration, writers []io.Writer) error {
+func (r *Runner) EnumerateSingleEmailOrDomain(probe string, scanType sources.ScanType, timeout time.Duration, writers []io.Writer) error {
 	var err error
 
-	logger.Infof("Enumerating leaks for email: %s", email)
+	logger.Infof("Enumerating leaks for probe: %s", probe)
 	results := make(chan sources.Result)
 
 	wg := &sync.WaitGroup{}
@@ -23,18 +23,18 @@ func (r *Runner) EnumerateSingleEmail(email string, timeout time.Duration, write
 		for result := range results {
 			// check if error
 			if result.Error != nil {
-				logger.Errorf("error enumerating email %s: %s", email, result.Error)
+				logger.Errorf("error enumerating probe %s: %s", probe, result.Error)
 				continue
 			}
 			// check if filtered
-			if !r.options.NoFilter && !strings.Contains(result.Value, email) {
+			if !r.options.NoFilter && !strings.Contains(result.Value, probe) {
 				continue
 			}
 			// write result
 			for _, writer := range writers {
 				err = WritePlainResult(writer, r.options.Verbose, result.Source, result.Value)
 				if err != nil {
-					logger.Errorf("could not write results for %s: %s", email, err)
+					logger.Errorf("could not write results for %s: %s", probe, err)
 				}
 			}
 		}
@@ -49,23 +49,23 @@ func (r *Runner) EnumerateSingleEmail(email string, timeout time.Duration, write
 			results <- sources.Result{
 				Source: "",
 				Value:  "",
-				Error:  fmt.Errorf("could not initiate passive session for %s: %s", email, err),
+				Error:  fmt.Errorf("could not initiate passive session for %s: %s", probe, err),
 			}
 			return
 		}
 		defer session.Close()
 
-		// Run each source in parallel on the target email
+		// Run each source in parallel on the target probe
 		wg := &sync.WaitGroup{}
 		for _, s := range ScanSources {
 			wg.Add(1)
 			go func(s sources.Source) {
 				defer wg.Done()
-				for result := range s.Run(email, session) {
+				for result := range s.Run(probe, scanType, session) {
 					results <- result
 				}
 				// sleep to enable source rate-limiting
-				// this is done like that because email enumeration is done one by one
+				// this is done like that because probe enumeration is done one by one
 				if !r.options.NoRateLimit {
 					time.Sleep(time.Second / time.Duration(s.RateLimit()))
 				}
@@ -75,6 +75,6 @@ func (r *Runner) EnumerateSingleEmail(email string, timeout time.Duration, write
 	}()
 	wg.Wait()
 
-	logger.Debugf("Finished leaks enumeration for email %s", email)
+	logger.Debugf("Finished leaks enumeration for probe %s", probe)
 	return nil
 }

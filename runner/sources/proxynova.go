@@ -17,7 +17,9 @@ type ProxyNova struct {
 }
 
 // Run function returns all subdomains found with the service
-func (s *ProxyNova) Run(email string, session *Session) <-chan Result {
+func (s *ProxyNova) Run(email string, scanType ScanType, session *Session) <-chan Result {
+	// ignore scanType because ProxyNova API works for any input
+
 	results := make(chan Result)
 
 	go func() {

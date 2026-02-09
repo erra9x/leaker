@@ -22,7 +22,12 @@ Created by Maksim Radaev/[@vflame6](https://github.com/vflame6)
 
 ![leaker](static/leaker_demo.png)
 
-Available sources: `proxynova`, `leakcheck`
+Available sources: `proxynova`, `leakcheck`.
+
+Available search types: 
+
+- Search by `email`, for example - `target@domain.com`
+- Search by `domain`, for example - `domain.com`
 
 ## Usage
 
@@ -38,7 +43,7 @@ Usage: leaker [<targets>] [flags]
   leaker is a leak discovery tool that returns valid credential leaks for emails, using passive online sources.
 
 Arguments:
-  [<targets>]    Target email or file with emails
+  [<targets>]    Target email/domain or file with emails/domains, one per line
 
 Flags:
   -h, --help                                     Show context-sensitive help.
@@ -85,6 +90,8 @@ docker build -t leaker .
 `leaker` can be used right after the installation, however many sources required API keys to work. View an example configuration file here: https://github.com/vflame6/leaker/blob/main/static/provider-config.yml
 
 The tool will generate a provider configuration file on the first launch, so you can also specify API keys there.
+
+If you wish to buy a LeakCheck subscription, you can support me by using my invite link to do that: https://leakcheck.io/?ref=486555. 
 
 ## Contributing
 

@@ -11,7 +11,7 @@ import (
 
 var CLI struct {
 	// INPUT
-	Targets string   `arg:"" optional:"" help:"Target email or file with emails"`
+	Targets string   `arg:"" optional:"" help:"Target email/domain or file with emails/domains, one per line"`
 	Sources []string `short:"s" default:"all" help:"Specific sources to use for enumeration (default all). Use --list-sources to display all available sources."`
 
 	// OPTIMIZATION
