@@ -1,9 +1,12 @@
 package sources
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 type Source interface {
-	Run(string, ScanType, *Session) <-chan Result
+	Run(context.Context, string, ScanType, *Session) <-chan Result
 
 	// Name returns the name of the source. It is preferred to use lower case names.
 	Name() string

@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
@@ -102,7 +103,7 @@ func (r *Runner) configureSources() error {
 	return nil
 }
 
-func (r *Runner) RunEnumeration() error {
+func (r *Runner) RunEnumeration(ctx context.Context) error {
 	var err error
 
 	// parse targets
@@ -129,10 +130,10 @@ func (r *Runner) RunEnumeration() error {
 		outputs = append(outputs, file)
 	}
 
-	return r.EnumerateMultipleTargets(t, outputs)
+	return r.EnumerateMultipleTargets(ctx, t, outputs)
 }
 
-func (r *Runner) EnumerateMultipleTargets(reader io.Reader, writers []io.Writer) error {
+func (r *Runner) EnumerateMultipleTargets(ctx context.Context, reader io.Reader, writers []io.Writer) error {
 	if !r.options.NoFilter {
 		logger.Debugf("Results filtering is enabled, leaker will filter results by matching every result to inputted target.")
 	} else {
@@ -159,7 +160,7 @@ func (r *Runner) EnumerateMultipleTargets(reader io.Reader, writers []io.Writer)
 		}
 
 		// run enumeration for a single line
-		if err := r.EnumerateSingleTarget(line, r.options.Type, r.options.Timeout, writers); err != nil {
+		if err := r.EnumerateSingleTarget(ctx, line, r.options.Type, r.options.Timeout, writers); err != nil {
 			logger.Errorf("error enumerating %s: %s", line, err)
 			errs = append(errs, err)
 		}

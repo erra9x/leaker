@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/alecthomas/kong"
 	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/runner"
 	"github.com/vflame6/leaker/runner/sources"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -138,12 +141,15 @@ func Run() {
 		Version:        VERSION,
 	}
 
+	runCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
 	r, err := runner.NewRunner(options)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	err = r.RunEnumeration()
+	err = r.RunEnumeration(runCtx)
 	if err != nil {
 		logger.Fatal(err)
 	}

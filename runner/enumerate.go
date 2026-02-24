@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/runner/sources"
@@ -10,7 +11,7 @@ import (
 	"time"
 )
 
-func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType, timeout time.Duration, writers []io.Writer) error {
+func (r *Runner) EnumerateSingleTarget(ctx context.Context, target string, scanType sources.ScanType, timeout time.Duration, writers []io.Writer) error {
 	var err error
 
 	logger.Infof("Enumerating leaks for %s", target)
@@ -24,6 +25,7 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 	seen := make(map[string]struct{})
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for result := range results {
 			// check if error
 			if result.Error != nil {
@@ -57,7 +59,6 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 				}
 			}
 		}
-		wg.Done()
 	}()
 
 	go func() {
@@ -66,9 +67,7 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 		session, err := sources.NewSession(timeout, r.options.UserAgent, r.options.Proxy, r.options.Insecure)
 		if err != nil {
 			results <- sources.Result{
-				Source: "",
-				Value:  "",
-				Error:  fmt.Errorf("could not initiate passive session for %s: %s", target, err),
+				Error: fmt.Errorf("could not initiate passive session for %s: %w", target, err),
 			}
 			return
 		}
@@ -80,8 +79,12 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 			wg.Add(1)
 			go func(s sources.Source) {
 				defer wg.Done()
-				for result := range s.Run(target, scanType, session) {
-					results <- result
+				for result := range s.Run(ctx, target, scanType, session) {
+					select {
+					case results <- result:
+					case <-ctx.Done():
+						return
+					}
 				}
 				// sleep to enable source rate-limiting
 				// this is done like that because target enumeration is done one by one
@@ -93,6 +96,11 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 		wg.Wait()
 	}()
 	wg.Wait()
+
+	if ctx.Err() != nil {
+		logger.Info("Interrupted")
+		return nil
+	}
 
 	timeElapsed := time.Since(timeStart).Truncate(time.Millisecond)
 	logger.Infof("Found %d leaks for %s in %v", numberOfResults, target, timeElapsed)

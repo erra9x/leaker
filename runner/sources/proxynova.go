@@ -1,11 +1,13 @@
 package sources
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
 	"io"
+	"net/http"
 )
 
 type ProxyNovaResponse struct {
@@ -18,14 +20,14 @@ type ProxyNova struct {
 
 // Run function returns all results found with the service.
 // ProxyNova does not filter by target type, so result filtering is applied downstream.
-func (s *ProxyNova) Run(target string, scanType ScanType, session *Session) <-chan Result {
+func (s *ProxyNova) Run(ctx context.Context, target string, scanType ScanType, session *Session) <-chan Result {
 	results := make(chan Result)
 
 	go func() {
 		defer close(results)
 
 		// Fetch the first page to learn the total count
-		firstPage, err := s.fetchPage(target, 0, session)
+		firstPage, err := s.fetchPage(ctx, target, 0, session)
 		if err != nil {
 			results <- Result{Source: s.Name(), Error: err}
 			return
@@ -40,7 +42,10 @@ func (s *ProxyNova) Run(target string, scanType ScanType, session *Session) <-ch
 			logger.Debugf("ProxyNova: %d total results for %s, paginating", firstPage.Count, target)
 			start := len(firstPage.Lines)
 			for start < firstPage.Count {
-				page, err := s.fetchPage(target, start, session)
+				if ctx.Err() != nil {
+					return
+				}
+				page, err := s.fetchPage(ctx, target, start, session)
 				if err != nil {
 					results <- Result{Source: s.Name(), Error: err}
 					return
@@ -61,11 +66,15 @@ func (s *ProxyNova) Run(target string, scanType ScanType, session *Session) <-ch
 }
 
 // fetchPage retrieves one page of results from ProxyNova starting at offset start.
-func (s *ProxyNova) fetchPage(target string, start int, session *Session) (*ProxyNovaResponse, error) {
+func (s *ProxyNova) fetchPage(ctx context.Context, target string, start int, session *Session) (*ProxyNovaResponse, error) {
 	url := fmt.Sprintf("https://api.proxynova.com/comb?query=%s&start=%d&limit=100", target, start)
 	logger.Debugf("Sending a request in ProxyNova source for %s (start=%d)", target, start)
 
-	resp, err := session.Client.Get(url)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := session.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}

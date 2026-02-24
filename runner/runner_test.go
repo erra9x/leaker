@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"strings"
 	"testing"
@@ -83,7 +84,7 @@ func TestEnumerateMultipleTargets_SkipsBlankLines(t *testing.T) {
 
 	var out bytes.Buffer
 	input := strings.NewReader("\n   \n\n")
-	err := r.EnumerateMultipleTargets(input, []io.Writer{&out})
+	err := r.EnumerateMultipleTargets(context.Background(), input, []io.Writer{&out})
 	if err != nil {
 		t.Fatalf("unexpected error on blank-only input: %v", err)
 	}
@@ -103,7 +104,7 @@ func TestEnumerateMultipleTargets_SkipsNonEmailForEmailType(t *testing.T) {
 	var out bytes.Buffer
 	// "notanemail" should be skipped; empty scanSources means valid emails produce no output either
 	input := strings.NewReader("notanemail\nnotanemail.com\n")
-	err := r.EnumerateMultipleTargets(input, []io.Writer{&out})
+	err := r.EnumerateMultipleTargets(context.Background(), input, []io.Writer{&out})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -120,7 +121,7 @@ func TestEnumerateMultipleTargets_SkipsNonDomainForDomainType(t *testing.T) {
 
 	var out bytes.Buffer
 	input := strings.NewReader("not a domain\nuser@example.com\n")
-	err := r.EnumerateMultipleTargets(input, []io.Writer{&out})
+	err := r.EnumerateMultipleTargets(context.Background(), input, []io.Writer{&out})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
