@@ -23,6 +23,7 @@ type Options struct {
 	Debug          bool
 	Insecure       bool // Insecure disables TLS certificate verification when true
 	ListSources    bool
+	NoDedup        bool // NoDedup disables deduplication of results across sources
 	NoFilter       bool
 	NoRateLimit    bool
 	Output         io.Writer

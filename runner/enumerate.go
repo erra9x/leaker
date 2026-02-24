@@ -21,6 +21,7 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 	wg := &sync.WaitGroup{}
 
 	// Process the results in a separate goroutine
+	seen := make(map[string]struct{})
 	wg.Add(1)
 	go func() {
 		for result := range results {
@@ -32,6 +33,13 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 			// check if filtered
 			if !r.options.NoFilter && !strings.Contains(result.Value, target) {
 				continue
+			}
+			// deduplicate results across sources (unless disabled)
+			if !r.options.NoDedup {
+				if _, already := seen[result.Value]; already {
+					continue
+				}
+				seen[result.Value] = struct{}{}
 			}
 
 			// increase number of results

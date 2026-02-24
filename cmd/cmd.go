@@ -33,6 +33,7 @@ var CLI struct {
 	NoRateLimit bool          `short:"N" help:"Disable rate limiting (DANGER)"`
 
 	// OUTPUT
+	NoDedup   bool   `help:"Disable deduplication of results across sources"`
 	NoFilter  bool   `help:"Disable results filtering, include every result"`
 	Output    string `short:"o" help:"File to write output to"`
 	Overwrite bool   `help:"Force overwrite of existing output file"`
@@ -118,6 +119,7 @@ func Run() {
 		Debug:          CLI.Debug,
 		Insecure:       CLI.Insecure,
 		ListSources:    CLI.ListSources,
+		NoDedup:        CLI.NoDedup,
 		NoFilter:       CLI.NoFilter,
 		NoRateLimit:    CLI.NoRateLimit,
 		OutputFile:     CLI.Output,
