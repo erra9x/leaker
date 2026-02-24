@@ -33,6 +33,7 @@ var CLI struct {
 	NoRateLimit bool          `short:"N" help:"Disable rate limiting (DANGER)"`
 
 	// OUTPUT
+	JSON      bool   `short:"j" help:"Output results as JSONL (one JSON object per line)"`
 	NoDedup   bool   `help:"Disable deduplication of results across sources"`
 	NoFilter  bool   `help:"Disable results filtering, include every result"`
 	Output    string `short:"o" help:"File to write output to"`
@@ -118,6 +119,7 @@ func Run() {
 	options := &runner.Options{
 		Debug:          CLI.Debug,
 		Insecure:       CLI.Insecure,
+		JSON:           CLI.JSON,
 		ListSources:    CLI.ListSources,
 		NoDedup:        CLI.NoDedup,
 		NoFilter:       CLI.NoFilter,

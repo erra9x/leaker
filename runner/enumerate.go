@@ -47,7 +47,11 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 
 			// write result
 			for _, writer := range writers {
-				err = WritePlainResult(writer, r.options.Verbose, result.Source, result.Value)
+				if r.options.JSON {
+					err = WriteJSONResult(writer, result.Source, result.Value, target)
+				} else {
+					err = WritePlainResult(writer, r.options.Verbose, result.Source, result.Value)
+				}
 				if err != nil {
 					logger.Errorf("could not write results for %s: %s", target, err)
 				}
