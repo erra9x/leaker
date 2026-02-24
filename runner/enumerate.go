@@ -64,7 +64,7 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 
 		// Run each source in parallel on the target
 		wg := &sync.WaitGroup{}
-		for _, s := range ScanSources {
+		for _, s := range r.scanSources {
 			wg.Add(1)
 			go func(s sources.Source) {
 				defer wg.Done()
