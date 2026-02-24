@@ -51,7 +51,7 @@ func (r *Runner) EnumerateSingleTarget(target string, scanType sources.ScanType,
 	go func() {
 		defer close(results)
 
-		session, err := sources.NewSession(timeout, r.options.UserAgent, r.options.Proxy)
+		session, err := sources.NewSession(timeout, r.options.UserAgent, r.options.Proxy, r.options.Insecure)
 		if err != nil {
 			results <- sources.Result{
 				Source: "",

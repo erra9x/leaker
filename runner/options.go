@@ -21,6 +21,7 @@ var (
 // Options struct is used to store leaker options. Sort alphabetically
 type Options struct {
 	Debug          bool
+	Insecure       bool // Insecure disables TLS certificate verification when true
 	ListSources    bool
 	NoFilter       bool
 	NoRateLimit    bool

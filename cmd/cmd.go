@@ -41,6 +41,7 @@ var CLI struct {
 	ProviderConfig string `short:"p" help:"Provider config file" default:"provider-config.yml"`
 	Proxy          string `help:"HTTP proxy to use with leaker"`
 	UserAgent      string `short:"A" help:"Custom user agent"`
+	Insecure       bool   `help:"Disable TLS certificate verification (use with caution)"`
 
 	// DEBUG
 	Version     bool `help:"Print version of leaker"`
@@ -115,6 +116,7 @@ func Run() {
 
 	options := &runner.Options{
 		Debug:          CLI.Debug,
+		Insecure:       CLI.Insecure,
 		ListSources:    CLI.ListSources,
 		NoFilter:       CLI.NoFilter,
 		NoRateLimit:    CLI.NoRateLimit,
