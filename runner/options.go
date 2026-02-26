@@ -20,27 +20,27 @@ var (
 
 // Options struct is used to store leaker options. Sort alphabetically
 type Options struct {
-	Debug          bool
-	Insecure       bool // Insecure disables TLS certificate verification when true
-	JSON           bool // JSON outputs results as JSONL (one JSON object per line)
-	ListSources    bool
-	ShowDuplicates bool // ShowDuplicates disables deduplication of results across sources
-	NoFilter       bool
-	NoRateLimit    bool
-	Output         io.Writer
-	OutputFile     string
-	Overwrite      bool
-	ProviderConfig string // ProviderConfig contains the location of the provider config file
-	Proxy          string
-	Quiet          bool
-	Sources        []string
-	Stdin          bool
-	Targets        string
-	Timeout        time.Duration
-	Type           sources.ScanType
-	UserAgent      string
-	Verbose        bool
-	Version        string
+	Debug           bool
+	Insecure        bool // Insecure disables TLS certificate verification when true
+	JSON            bool // JSON outputs results as JSONL (one JSON object per line)
+	ListSources     bool
+	NoDeduplication bool // NoDeduplication disables deduplication of results across sources
+	NoFilter        bool
+	NoRateLimit     bool
+	Output          io.Writer
+	OutputFile      string
+	Overwrite       bool
+	ProviderConfig  string // ProviderConfig contains the location of the provider config file
+	Proxy           string
+	Quiet           bool
+	Sources         []string
+	Stdin           bool
+	Targets         string
+	Timeout         time.Duration
+	Type            sources.ScanType
+	UserAgent       string
+	Verbose         bool
+	Version         string
 }
 
 // ListSources prints all available sources to stdout.

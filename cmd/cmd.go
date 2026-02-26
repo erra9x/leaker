@@ -36,11 +36,11 @@ var CLI struct {
 	NoRateLimit bool          `short:"N" help:"Disable rate limiting (DANGER)"`
 
 	// OUTPUT
-	JSON           bool   `short:"j" help:"Output results as JSONL (one JSON object per line)"`
-	ShowDuplicates bool   `help:"Disable deduplication of results across sources"`
-	NoFilter       bool   `help:"Disable results filtering, include every result"`
-	Output         string `short:"o" help:"File to write output to"`
-	Overwrite      bool   `help:"Force overwrite of existing output file"`
+	JSON            bool   `short:"j" help:"Output results as JSONL (one JSON object per line)"`
+	NoDeduplication bool   `help:"Disable deduplication of results across sources"`
+	NoFilter        bool   `help:"Disable results filtering, include every result"`
+	Output          string `short:"o" help:"File to write output to"`
+	Overwrite       bool   `help:"Force overwrite of existing output file"`
 
 	// CONFIGURATION
 	ProviderConfig string `short:"p" help:"Provider config file" default:"provider-config.yml"`
@@ -120,25 +120,25 @@ func Run() {
 	}
 
 	options := &runner.Options{
-		Debug:          CLI.Debug,
-		Insecure:       CLI.Insecure,
-		JSON:           CLI.JSON,
-		ListSources:    CLI.ListSources,
-		ShowDuplicates: CLI.ShowDuplicates,
-		NoFilter:       CLI.NoFilter,
-		NoRateLimit:    CLI.NoRateLimit,
-		OutputFile:     CLI.Output,
-		Overwrite:      CLI.Overwrite,
-		ProviderConfig: CLI.ProviderConfig,
-		Proxy:          CLI.Proxy,
-		Quiet:          CLI.Quiet,
-		Sources:        CLI.Sources,
-		Targets:        targets,
-		Timeout:        CLI.Timeout,
-		Type:           scanType,
-		UserAgent:      CLI.UserAgent,
-		Verbose:        CLI.Verbose,
-		Version:        VERSION,
+		Debug:           CLI.Debug,
+		Insecure:        CLI.Insecure,
+		JSON:            CLI.JSON,
+		ListSources:     CLI.ListSources,
+		NoDeduplication: CLI.NoDeduplication,
+		NoFilter:        CLI.NoFilter,
+		NoRateLimit:     CLI.NoRateLimit,
+		OutputFile:      CLI.Output,
+		Overwrite:       CLI.Overwrite,
+		ProviderConfig:  CLI.ProviderConfig,
+		Proxy:           CLI.Proxy,
+		Quiet:           CLI.Quiet,
+		Sources:         CLI.Sources,
+		Targets:         targets,
+		Timeout:         CLI.Timeout,
+		Type:            scanType,
+		UserAgent:       CLI.UserAgent,
+		Verbose:         CLI.Verbose,
+		Version:         VERSION,
 	}
 
 	runCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

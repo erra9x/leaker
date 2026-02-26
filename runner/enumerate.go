@@ -37,7 +37,7 @@ func (r *Runner) EnumerateSingleTarget(ctx context.Context, target string, scanT
 				continue
 			}
 			// deduplicate results across sources (unless disabled)
-			if !r.options.ShowDuplicates {
+			if !r.options.NoDeduplication {
 				if _, already := seen[result.Value]; already {
 					continue
 				}
