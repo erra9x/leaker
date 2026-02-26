@@ -1,11 +1,12 @@
 package sources
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
 	"io"
+	"net/http"
 )
 
 type ProxyNovaResponse struct {
@@ -16,66 +17,80 @@ type ProxyNovaResponse struct {
 type ProxyNova struct {
 }
 
-// Run function returns all subdomains found with the service
-func (s *ProxyNova) Run(email string, scanType ScanType, session *Session) <-chan Result {
-	// ignore scanType because ProxyNova API works with any input
-	// that's why result filtering is enabled by default
-
+// Run function returns all results found with the service.
+// ProxyNova does not filter by target type, so result filtering is applied downstream.
+func (s *ProxyNova) Run(ctx context.Context, target string, scanType ScanType, session *Session) <-chan Result {
 	results := make(chan Result)
 
 	go func() {
-		var response ProxyNovaResponse
+		defer close(results)
 
-		defer func() {
-			close(results)
-		}()
-
-		logger.Debugf("Sending a request in ProxyNova source for %s", email)
-		resp, err := session.Client.Get(fmt.Sprintf("https://api.proxynova.com/comb?query=%s&start=0&limit=100", email))
+		// Fetch the first page to learn the total count
+		firstPage, err := s.fetchPage(ctx, target, 0, session)
 		if err != nil {
-			results <- Result{
-				Source: s.Name(),
-				Value:  "",
-				Error:  err,
-			}
-			return
-		}
-		defer session.DiscardHTTPResponse(resp)
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			results <- Result{
-				Source: s.Name(),
-				Value:  "",
-				Error:  err,
-			}
-			return
-		}
-		logger.Debugf("Response from ProxyNova source: status code [%d], size [%d]", resp.StatusCode, len(body))
-
-		err = json.Unmarshal(body, &response)
-		if err != nil {
-			results <- Result{
-				Source: s.Name(),
-				Value:  "",
-				Error:  errors.New(fmt.Sprintf("failed to parse ProxyNova response: %s", string(body))),
-			}
+			results <- Result{Source: s.Name(), Error: err}
 			return
 		}
 
-		if response.Count > 0 {
-			// ProxyNova gives non-filtered results, so the output will be a mess
-			for _, line := range response.Lines {
-				results <- Result{
-					Source: s.Name(),
-					Value:  line,
-					Error:  nil,
+		for _, line := range firstPage.Lines {
+			results <- Result{Source: s.Name(), Value: line}
+		}
+
+		// Paginate if there are more results than the first page returned
+		if firstPage.Count > len(firstPage.Lines) {
+			logger.Debugf("ProxyNova: %d total results for %s, paginating", firstPage.Count, target)
+			start := len(firstPage.Lines)
+			for start < firstPage.Count {
+				if ctx.Err() != nil {
+					return
 				}
+				page, err := s.fetchPage(ctx, target, start, session)
+				if err != nil {
+					results <- Result{Source: s.Name(), Error: err}
+					return
+				}
+				if len(page.Lines) == 0 {
+					// no more results despite count suggesting otherwise
+					break
+				}
+				for _, line := range page.Lines {
+					results <- Result{Source: s.Name(), Value: line}
+				}
+				start += len(page.Lines)
 			}
 		}
 	}()
 
 	return results
+}
+
+// fetchPage retrieves one page of results from ProxyNova starting at offset start.
+func (s *ProxyNova) fetchPage(ctx context.Context, target string, start int, session *Session) (*ProxyNovaResponse, error) {
+	url := fmt.Sprintf("https://api.proxynova.com/comb?query=%s&start=%d&limit=100", target, start)
+	logger.Debugf("Sending a request in ProxyNova source for %s (start=%d)", target, start)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := session.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer session.DiscardHTTPResponse(resp)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	logger.Debugf("Response from ProxyNova source: status code [%d], size [%d]", resp.StatusCode, len(body))
+
+	var response ProxyNovaResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse ProxyNova response: %s", string(body))
+	}
+
+	return &response, nil
 }
 
 // Name returns the name of the source

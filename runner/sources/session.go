@@ -2,7 +2,6 @@ package sources
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
 	"io"
@@ -12,13 +11,15 @@ import (
 	"time"
 )
 
-// NewSession creates a new session object for an email
-func NewSession(timeout time.Duration, userAgent, proxy string) (*Session, error) {
+// NewSession creates a new session object for an email.
+// Set insecure=true only when the caller explicitly opts in via --insecure;
+// by default TLS certificates are verified.
+func NewSession(timeout time.Duration, userAgent, proxy string, insecure bool) (*Session, error) {
 	tr := &http.Transport{
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 100,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: insecure, //nolint:gosec // controlled by --insecure flag
 		},
 		Dial: (&net.Dialer{
 			Timeout: timeout,
@@ -30,7 +31,7 @@ func NewSession(timeout time.Duration, userAgent, proxy string) (*Session, error
 	if proxy != "" {
 		proxyURL, _ := url.Parse(proxy)
 		if proxyURL == nil {
-			return nil, errors.New(fmt.Sprintf("Invalid proxy provided: %s", proxy))
+			return nil, fmt.Errorf("invalid proxy provided: %s", proxy)
 		} else {
 			tr.Proxy = http.ProxyURL(proxyURL)
 		}

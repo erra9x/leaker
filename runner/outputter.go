@@ -1,28 +1,35 @@
 package runner
 
 import (
-	"bufio"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"io"
 )
 
 func WritePlainResult(writer io.Writer, verbose bool, source, value string) error {
-	var result string
-	bufwriter := bufio.NewWriter(writer)
-
 	if verbose {
-		result = fmt.Sprintf("[%s] %s\n", source, value)
-	} else {
-		result = fmt.Sprintf("%s\n", value)
-	}
-
-	_, err := bufwriter.WriteString(result)
-	if err != nil {
-		if flushErr := bufwriter.Flush(); flushErr != nil {
-			return errors.Join(err, flushErr)
-		}
+		_, err := fmt.Fprintf(writer, "[%s] %s\n", source, value)
 		return err
 	}
-	return bufwriter.Flush()
+	_, err := fmt.Fprintf(writer, "%s\n", value)
+	return err
+}
+
+type jsonResult struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+	Value  string `json:"value"`
+}
+
+func WriteJSONResult(writer io.Writer, source, value, target string) error {
+	data, err := json.Marshal(jsonResult{
+		Source: source,
+		Target: target,
+		Value:  value,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(writer, "%s\n", data)
+	return err
 }

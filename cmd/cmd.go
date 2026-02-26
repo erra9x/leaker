@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/alecthomas/kong"
 	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/runner"
 	"github.com/vflame6/leaker/runner/sources"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -33,6 +36,8 @@ var CLI struct {
 	NoRateLimit bool          `short:"N" help:"Disable rate limiting (DANGER)"`
 
 	// OUTPUT
+	JSON      bool   `short:"j" help:"Output results as JSONL (one JSON object per line)"`
+	NoDedup   bool   `help:"Disable deduplication of results across sources"`
 	NoFilter  bool   `help:"Disable results filtering, include every result"`
 	Output    string `short:"o" help:"File to write output to"`
 	Overwrite bool   `help:"Force overwrite of existing output file"`
@@ -41,6 +46,7 @@ var CLI struct {
 	ProviderConfig string `short:"p" help:"Provider config file" default:"provider-config.yml"`
 	Proxy          string `help:"HTTP proxy to use with leaker"`
 	UserAgent      string `short:"A" help:"Custom user agent"`
+	Insecure       bool   `help:"Disable TLS certificate verification (use with caution)"`
 
 	// DEBUG
 	Version     bool `help:"Print version of leaker"`
@@ -115,7 +121,10 @@ func Run() {
 
 	options := &runner.Options{
 		Debug:          CLI.Debug,
+		Insecure:       CLI.Insecure,
+		JSON:           CLI.JSON,
 		ListSources:    CLI.ListSources,
+		NoDedup:        CLI.NoDedup,
 		NoFilter:       CLI.NoFilter,
 		NoRateLimit:    CLI.NoRateLimit,
 		OutputFile:     CLI.Output,
@@ -132,12 +141,15 @@ func Run() {
 		Version:        VERSION,
 	}
 
+	runCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
 	r, err := runner.NewRunner(options)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	err = r.RunEnumeration()
+	err = r.RunEnumeration(runCtx)
 	if err != nil {
 		logger.Fatal(err)
 	}

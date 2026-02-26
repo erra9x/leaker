@@ -1,8 +1,8 @@
 package sources
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/utils"
@@ -16,7 +16,7 @@ type LeakCheck struct {
 }
 
 // Run function returns all subdomains found with the service
-func (s *LeakCheck) Run(target string, scanType ScanType, session *Session) <-chan Result {
+func (s *LeakCheck) Run(ctx context.Context, target string, scanType ScanType, session *Session) <-chan Result {
 	results := make(chan Result)
 
 	go func() {
@@ -45,7 +45,7 @@ func (s *LeakCheck) Run(target string, scanType ScanType, session *Session) <-ch
 		}
 
 		// prepare request with custom headers
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 		if err != nil {
 			results <- Result{
 				Source: s.Name(),
@@ -96,7 +96,7 @@ func (s *LeakCheck) Run(target string, scanType ScanType, session *Session) <-ch
 			results <- Result{
 				Source: s.Name(),
 				Value:  "",
-				Error:  errors.New(fmt.Sprintf("failed to parse LeakCheck response: %s", string(body))),
+				Error:  fmt.Errorf("failed to parse LeakCheck response: %s", string(body)),
 			}
 			return
 		}
@@ -105,7 +105,7 @@ func (s *LeakCheck) Run(target string, scanType ScanType, session *Session) <-ch
 			results <- Result{
 				Source: s.Name(),
 				Value:  "",
-				Error:  errors.New(fmt.Sprintf("failed to parse LeakCheck response: %s", string(body))),
+				Error:  fmt.Errorf("failed to parse LeakCheck response: %s", string(body)),
 			}
 			return
 		}
@@ -116,7 +116,7 @@ func (s *LeakCheck) Run(target string, scanType ScanType, session *Session) <-ch
 				results <- Result{
 					Source: s.Name(),
 					Value:  "",
-					Error:  errors.New(fmt.Sprintf("failed to parse LeakCheck response: %s", string(body))),
+					Error:  fmt.Errorf("failed to parse LeakCheck response: %s", string(body)),
 				}
 				return
 			}
@@ -148,7 +148,7 @@ func (s *LeakCheck) Run(target string, scanType ScanType, session *Session) <-ch
 					results <- Result{
 						Source: s.Name(),
 						Value:  "",
-						Error:  errors.New(fmt.Sprintf("failed to parse LeakCheck response: %s", string(body))),
+						Error:  fmt.Errorf("failed to parse LeakCheck response: %s", string(body)),
 					}
 				}
 			}

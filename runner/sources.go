@@ -7,6 +7,3 @@ var AllSources = [...]sources.Source{
 	&sources.LeakCheck{},
 	&sources.ProxyNova{},
 }
-
-// ScanSources variable is used to store sources that will be used in actual scan
-var ScanSources []sources.Source

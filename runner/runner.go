@@ -2,6 +2,8 @@ package runner
 
 import (
 	"bufio"
+	"context"
+	"errors"
 	"fmt"
 	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/runner/sources"
@@ -14,7 +16,8 @@ import (
 )
 
 type Runner struct {
-	options *Options
+	options     *Options
+	scanSources []sources.Source
 }
 
 // NewRunner creates a new runner struct instance by parsing
@@ -85,7 +88,7 @@ func (r *Runner) configureSources() error {
 		logger.Debug("Configuring leaker to use all available sources")
 		// add all sources
 		for _, source := range AllSources {
-			ScanSources = append(ScanSources, source)
+			r.scanSources = append(r.scanSources, source)
 		}
 		return nil
 	}
@@ -94,13 +97,13 @@ func (r *Runner) configureSources() error {
 	logger.Debugf("Configuring leaker to use specified sources: %s", strings.Join(r.options.Sources, ", "))
 	for _, source := range AllSources {
 		if slices.Contains(r.options.Sources, strings.ToLower(source.Name())) {
-			ScanSources = append(ScanSources, source)
+			r.scanSources = append(r.scanSources, source)
 		}
 	}
 	return nil
 }
 
-func (r *Runner) RunEnumeration() error {
+func (r *Runner) RunEnumeration(ctx context.Context) error {
 	var err error
 
 	// parse targets
@@ -127,12 +130,10 @@ func (r *Runner) RunEnumeration() error {
 		outputs = append(outputs, file)
 	}
 
-	return r.EnumerateMultipleTargets(t, outputs)
+	return r.EnumerateMultipleTargets(ctx, t, outputs)
 }
 
-func (r *Runner) EnumerateMultipleTargets(reader io.Reader, writers []io.Writer) error {
-	var err error
-
+func (r *Runner) EnumerateMultipleTargets(ctx context.Context, reader io.Reader, writers []io.Writer) error {
 	if !r.options.NoFilter {
 		logger.Debugf("Results filtering is enabled, leaker will filter results by matching every result to inputted target.")
 	} else {
@@ -143,6 +144,7 @@ func (r *Runner) EnumerateMultipleTargets(reader io.Reader, writers []io.Writer)
 	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	domainRegex := regexp.MustCompile(`^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`)
 
+	var errs []error
 	for scanner.Scan() {
 		line := strings.ToLower(strings.TrimSpace(scanner.Text()))
 
@@ -158,11 +160,11 @@ func (r *Runner) EnumerateMultipleTargets(reader io.Reader, writers []io.Writer)
 		}
 
 		// run enumeration for a single line
-		err = r.EnumerateSingleTarget(line, r.options.Type, r.options.Timeout, writers)
-	}
-	if err != nil {
-		return err
+		if err := r.EnumerateSingleTarget(ctx, line, r.options.Type, r.options.Timeout, writers); err != nil {
+			logger.Errorf("error enumerating %s: %s", line, err)
+			errs = append(errs, err)
+		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
