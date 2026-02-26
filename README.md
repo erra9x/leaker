@@ -55,7 +55,7 @@ Flags:
   --timeout=30s          Seconds to wait before timing out (default 30s)
   -N, --no-rate-limit        Disable rate limiting (DANGER)
   -j, --json                 Output results as JSONL (one JSON object per line)
-  --show-duplicates      Disable deduplication of results across sources
+  --no-deduplication     Disable deduplication of results across sources
   --no-filter            Disable results filtering, include every result
   -o, --output=STRING        File to write output to
   --overwrite            Force overwrite of existing output file
