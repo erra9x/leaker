@@ -7,4 +7,5 @@ var AllSources = [...]sources.Source{
 	&sources.LeakCheck{},
 	&sources.ProxyNova{},
 	&sources.OSINTLeak{},
+	&sources.IntelX{},
 }
