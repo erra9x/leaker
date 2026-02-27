@@ -10,4 +10,5 @@ var AllSources = [...]sources.Source{
 	&sources.IntelX{},
 	&sources.BreachDirectory{},
 	&sources.LeakLookup{},
+	&sources.DeHashed{},
 }
