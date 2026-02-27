@@ -50,6 +50,8 @@ func (s *Snusbase) Run(ctx context.Context, target string, scanType ScanType, se
 			searchTypes = []string{"_domain"}
 		case TypeKeyword:
 			searchTypes = []string{"password"}
+		case TypePhone:
+			searchTypes = []string{"email", "username"}
 		}
 
 		searchReq := snusbaseSearchRequest{
