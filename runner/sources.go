@@ -9,4 +9,5 @@ var AllSources = [...]sources.Source{
 	&sources.OSINTLeak{},
 	&sources.IntelX{},
 	&sources.BreachDirectory{},
+	&sources.LeakLookup{},
 }
