@@ -12,4 +12,5 @@ var AllSources = [...]sources.Source{
 	&sources.LeakLookup{},
 	&sources.DeHashed{},
 	&sources.Snusbase{},
+	&sources.LeakSight{},
 }
