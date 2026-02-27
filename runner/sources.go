@@ -8,4 +8,5 @@ var AllSources = [...]sources.Source{
 	&sources.ProxyNova{},
 	&sources.OSINTLeak{},
 	&sources.IntelX{},
+	&sources.BreachDirectory{},
 }
