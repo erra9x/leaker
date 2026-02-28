@@ -104,10 +104,10 @@ Search by email:
 leaker email user@example.com
 ```
 
-Search by domain using specific sources:
+Search by domain using specific sources and piped input:
 
 ```shell
-leaker domain example.com -s leakcheck,dehashed
+echo "example.com" | leaker domain -s leakcheck,dehashed
 ```
 
 Search by phone number with JSONL output:

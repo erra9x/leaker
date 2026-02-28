@@ -79,7 +79,7 @@ func (r *Runner) configureSources() error {
 	}
 	for _, source := range r.options.Sources {
 		if !slices.Contains(allSourcesNames, source) {
-			return fmt.Errorf("invalid source %s specified in -s flag", source)
+			return fmt.Errorf("invalid source \"%s\" specified in -s flag", source)
 		}
 	}
 
