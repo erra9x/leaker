@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 )
@@ -53,7 +54,13 @@ func listSources(options *Options) {
 	logger.Infof("Sources marked with an * require key(s) or token(s) to work.")
 	logger.Infof("You can modify %s to configure your keys/tokens.\n", options.ProviderConfig)
 
-	for _, source := range AllSources {
+	sorted := make([]sources.Source, len(AllSources))
+	copy(sorted, AllSources[:])
+	slices.SortFunc(sorted, func(a, b sources.Source) int {
+		return strings.Compare(strings.ToLower(a.Name()), strings.ToLower(b.Name()))
+	})
+
+	for _, source := range sorted {
 		sourceName := source.Name()
 		if source.NeedsKey() {
 			fmt.Printf("%s *\n", sourceName)
