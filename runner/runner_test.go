@@ -123,7 +123,7 @@ func TestEnumerateMultipleTargets_NormalizesPhoneInput(t *testing.T) {
 
 	var out bytes.Buffer
 	// These should all be normalized and NOT skipped (valid digit counts)
-	input := strings.NewReader("+7 (995) 234 10 96\n+998-50-123-45-67\n79952341096\n")
+	input := strings.NewReader("+1 (555) 234 10 96\n+998-50-123-45-67\n15552341096\n")
 	err := r.EnumerateMultipleTargets(context.Background(), input, []io.Writer{&out})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
