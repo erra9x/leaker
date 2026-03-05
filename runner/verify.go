@@ -144,7 +144,7 @@ func (v *Verifier) hibpCount(password string) int {
 
 // fetchHIBPRange queries the HIBP Passwords API for the given 5-char SHA-1 prefix.
 func (v *Verifier) fetchHIBPRange(prefix string) ([]string, error) {
-	url := fmt.Sprintf("https://api.haveibeenpwned.com/range/%s", prefix)
+	url := fmt.Sprintf("https://api.pwnedpasswords.com/range/%s", prefix)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
