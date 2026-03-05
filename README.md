@@ -1,4 +1,5 @@
 <h1 align="center">
+    <img src="static/icon.svg" width="28" height="28" alt="icon"/>
     leaker
 </h1>
 
