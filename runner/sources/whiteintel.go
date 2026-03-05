@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/utils"
@@ -130,36 +129,27 @@ func (s *WhiteIntel) Run(ctx context.Context, target string, scanType ScanType, 
 		}
 
 		for _, record := range response.Results {
-			var parts []string
+			r := Result{
+				Source:   s.Name(),
+				Username: record.Username,
+				Password: record.Password,
+				IP:       record.IP,
+				URL:      record.URL,
+			}
 			if record.DataType != "" {
-				parts = append(parts, "data_type:"+record.DataType)
-			}
-			if record.URL != "" {
-				parts = append(parts, "url:"+record.URL)
-			}
-			if record.Username != "" {
-				parts = append(parts, "username:"+record.Username)
-			}
-			if record.Password != "" {
-				parts = append(parts, "password:"+record.Password)
+				r.SetExtra("data_type", record.DataType)
 			}
 			if record.Hostname != "" {
-				parts = append(parts, "hostname:"+record.Hostname)
-			}
-			if record.IP != "" {
-				parts = append(parts, "ip:"+record.IP)
+				r.SetExtra("hostname", record.Hostname)
 			}
 			if record.LogDate != "" {
-				parts = append(parts, "log_date:"+record.LogDate)
+				r.SetExtra("log_date", record.LogDate)
 			}
 			if record.MalwarePath != "" {
-				parts = append(parts, "malware_path:"+record.MalwarePath)
+				r.SetExtra("malware_path", record.MalwarePath)
 			}
-			if len(parts) > 0 {
-				results <- Result{
-					Source: s.Name(),
-					Value:  strings.Join(parts, ", "),
-				}
+			if r.HasData() {
+				results <- r
 			}
 		}
 	}()

@@ -118,17 +118,30 @@ func (s *WeLeakInfo) Run(ctx context.Context, target string, scanType ScanType, 
 		}
 
 		for _, record := range response.Data {
-			var parts []string
-			for _, field := range []string{"email", "username", "password", "hash", "name", "ip", "phone"} {
-				if val, ok := record[field].(string); ok && val != "" {
-					parts = append(parts, field+":"+val)
-				}
+			r := Result{Source: s.Name()}
+			if val, ok := record["email"].(string); ok && val != "" {
+				r.Email = val
 			}
-			if len(parts) > 0 {
-				results <- Result{
-					Source: s.Name(),
-					Value:  strings.Join(parts, ", "),
-				}
+			if val, ok := record["username"].(string); ok && val != "" {
+				r.Username = val
+			}
+			if val, ok := record["password"].(string); ok && val != "" {
+				r.Password = val
+			}
+			if val, ok := record["hash"].(string); ok && val != "" {
+				r.Hash = val
+			}
+			if val, ok := record["name"].(string); ok && val != "" {
+				r.Name = val
+			}
+			if val, ok := record["ip"].(string); ok && val != "" {
+				r.IP = val
+			}
+			if val, ok := record["phone"].(string); ok && val != "" {
+				r.Phone = val
+			}
+			if r.HasData() {
+				results <- r
 			}
 		}
 	}()

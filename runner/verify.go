@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"fmt"
+	"github.com/vflame6/leaker/runner/sources"
 	"io"
 	"net/http"
 	"regexp"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-// Verifier enriches result values with HIBP password breach counts and hash type identification.
+// Verifier enriches results with HIBP password breach counts and hash type identification.
 type Verifier struct {
 	client     *http.Client
 	enabled    bool
@@ -34,47 +35,22 @@ func NewVerifier(enabled bool) *Verifier {
 	}
 }
 
-// EnrichResult parses a result value string and appends verification signals.
-// Input format: "field1:value1, field2:value2, ..."
-// Returns the enriched string (or unchanged if not enabled / no enrichable fields).
-func (v *Verifier) EnrichResult(value string) string {
+// EnrichResult enriches a Result in-place with verification signals.
+func (v *Verifier) EnrichResult(result *sources.Result) {
 	if !v.enabled {
-		return value
+		return
 	}
 
-	parts := splitResultFields(value)
-	fields := make(map[string]string, len(parts))
-	for _, p := range parts {
-		idx := strings.Index(p, ":")
-		if idx < 0 {
-			continue
-		}
-		k := strings.TrimSpace(p[:idx])
-		val := strings.TrimSpace(p[idx+1:])
-		fields[k] = val
+	// HIBP Password Check
+	if result.Password != "" {
+		count := v.hibpCount(result.Password)
+		result.SetExtra("hibp_count", fmt.Sprintf("%d", count))
 	}
 
-	enriched := value
-
-	// 1a. HIBP Password Check
-	if pw, ok := fields["password"]; ok && pw != "" {
-		count := v.hibpCount(pw)
-		enriched = enriched + fmt.Sprintf(", hibp_count:%d", count)
+	// Hash Format Identification
+	if result.Hash != "" {
+		result.SetExtra("hash_type", identifyHash(result.Hash))
 	}
-
-	// 1b. Hash Format Identification
-	if h, ok := fields["hash"]; ok && h != "" {
-		enriched = enriched + fmt.Sprintf(", hash_type:%s", identifyHash(h))
-	}
-
-	return enriched
-}
-
-// splitResultFields splits "field1:value1, field2:value2" into individual "field:value" strings.
-// It is careful not to split on colons that are part of values (e.g. timestamps).
-// The format uses ", " as delimiter between fields.
-func splitResultFields(value string) []string {
-	return strings.Split(value, ", ")
 }
 
 // hibpCount returns the number of times the password appears in the HIBP breach corpus.

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/utils"
@@ -100,12 +99,9 @@ func (s *HudsonRock) runFree(ctx context.Context, target string, scanType ScanTy
 	}
 
 	for _, stealer := range response.Stealers {
-		parts := s.extractFields(stealer)
-		if len(parts) > 0 {
-			results <- Result{
-				Source: s.Name(),
-				Value:  strings.Join(parts, ", "),
-			}
+		r := s.recordToResult(stealer)
+		if r.HasData() {
+			results <- r
 		}
 	}
 }
@@ -169,24 +165,43 @@ func (s *HudsonRock) runPaid(ctx context.Context, target string, scanType ScanTy
 	}
 
 	for _, record := range response.Data {
-		parts := s.extractFields(record)
-		if len(parts) > 0 {
-			results <- Result{
-				Source: s.Name(),
-				Value:  strings.Join(parts, ", "),
-			}
+		r := s.recordToResult(record)
+		if r.HasData() {
+			results <- r
 		}
 	}
 }
 
-func (s *HudsonRock) extractFields(record map[string]interface{}) []string {
-	var parts []string
-	for _, field := range []string{"url", "username", "email", "password", "computer_name", "operating_system", "ip", "date_compromised", "stealer_family"} {
-		if val, ok := record[field].(string); ok && val != "" {
-			parts = append(parts, field+":"+val)
-		}
+func (s *HudsonRock) recordToResult(record map[string]interface{}) Result {
+	r := Result{Source: s.Name()}
+	if val, ok := record["email"].(string); ok && val != "" {
+		r.Email = val
 	}
-	return parts
+	if val, ok := record["username"].(string); ok && val != "" {
+		r.Username = val
+	}
+	if val, ok := record["password"].(string); ok && val != "" {
+		r.Password = val
+	}
+	if val, ok := record["ip"].(string); ok && val != "" {
+		r.IP = val
+	}
+	if val, ok := record["url"].(string); ok && val != "" {
+		r.URL = val
+	}
+	if val, ok := record["computer_name"].(string); ok && val != "" {
+		r.SetExtra("computer_name", val)
+	}
+	if val, ok := record["operating_system"].(string); ok && val != "" {
+		r.SetExtra("operating_system", val)
+	}
+	if val, ok := record["date_compromised"].(string); ok && val != "" {
+		r.SetExtra("date_compromised", val)
+	}
+	if val, ok := record["stealer_family"].(string); ok && val != "" {
+		r.SetExtra("stealer_family", val)
+	}
+	return r
 }
 
 func (s *HudsonRock) Name() string {
