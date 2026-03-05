@@ -62,14 +62,9 @@ func (s *WeLeakInfo) Run(ctx context.Context, target string, scanType ScanType, 
 			searchReq.Wildcard = "true"
 		case TypeKeyword:
 			searchReq.Type = "password"
-		case TypePhone:
-			searchReq.Type = "email"
 		default:
-			results <- Result{
-				Source: s.Name(),
-				Error:  fmt.Errorf("WeLeakInfo does not support scan type %d", scanType),
-			}
-			return
+			// Phone and any other types — fall back to username search
+			searchReq.Type = "username"
 		}
 
 		body, err := json.Marshal(searchReq)

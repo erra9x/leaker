@@ -50,16 +50,11 @@ func (s *HudsonRock) runFree(ctx context.Context, target string, scanType ScanTy
 	switch scanType {
 	case TypeEmail:
 		url = baseURL + "search-by-email?email=" + target
-	case TypeUsername:
-		url = baseURL + "search-by-username?username=" + target
 	case TypeDomain:
 		url = baseURL + "search-by-domain?domain=" + target
 	default:
-		results <- Result{
-			Source: s.Name(),
-			Error:  fmt.Errorf("HudsonRock free API does not support scan type %d", scanType),
-		}
-		return
+		// Username, keyword, phone — all fall back to username search
+		url = baseURL + "search-by-username?username=" + target
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -118,11 +113,8 @@ func (s *HudsonRock) runPaid(ctx context.Context, target string, scanType ScanTy
 	case TypeDomain:
 		searchType = "domain"
 	default:
-		results <- Result{
-			Source: s.Name(),
-			Error:  fmt.Errorf("HudsonRock paid API does not support scan type %d", scanType),
-		}
-		return
+		// Keyword, phone — fall back to username search
+		searchType = "username"
 	}
 
 	url := fmt.Sprintf("%s?type=%s&query=%s", baseURL, searchType, target)

@@ -69,11 +69,9 @@ func (s *WhiteIntel) Run(ctx context.Context, target string, scanType ScanType, 
 			searchReq.Query = target
 			searchReq.Username = target
 		default:
-			results <- Result{
-				Source: s.Name(),
-				Error:  fmt.Errorf("WhiteIntel does not support scan type %d", scanType),
-			}
-			return
+			// Keyword, phone — fall back to username search
+			searchReq.Query = target
+			searchReq.Username = target
 		}
 
 		body, err := json.Marshal(searchReq)
