@@ -28,10 +28,21 @@ type intelxKey struct {
 
 // intelxSearchRequest is the request body for POST /intelligent/search
 type intelxSearchRequest struct {
-	Term       string `json:"term"`
-	MaxResults int    `json:"maxresults"`
-	Sort       int    `json:"sort"` // 4 = date desc
-	Media      int    `json:"media"`
+	Term       string   `json:"term"`
+	Buckets    []string `json:"buckets"`
+	MaxResults int      `json:"maxresults"`
+	Sort       int      `json:"sort"` // 4 = date desc
+	Media      int      `json:"media"`
+}
+
+// intelxLeakBuckets restricts searches to leak/paste/darknet buckets only.
+// This prevents downloading and parsing unrelated web pages that merely mention the search term.
+var intelxLeakBuckets = []string{
+	"leaks.public",
+	"leaks.private",
+	"pastes",
+	"darknet.tor",
+	"darknet.i2p",
 }
 
 type intelxSearchResponse struct {
@@ -73,9 +84,12 @@ func (s *IntelX) Run(ctx context.Context, target string, scanType ScanType, sess
 		apiURL := fmt.Sprintf("https://%s/", key.host)
 		lowerTarget := strings.ToLower(target)
 
-		// Start the search
+		// Start the search, restricted to leak/paste/darknet buckets only.
+		// Without bucket filtering, IntelX returns all indexed content including
+		// web pages that merely mention the domain, producing garbage results.
 		searchReq := intelxSearchRequest{
 			Term:       target,
+			Buckets:    intelxLeakBuckets,
 			MaxResults: 100,
 			Sort:       4, // date desc
 			Media:      0, // all media types
@@ -210,10 +224,24 @@ func (s *IntelX) Run(ctx context.Context, target string, scanType ScanType, sess
 			uniqueRecords = append(uniqueRecords, record)
 		}
 
-		// For each unique record, fetch file contents and extract matching lines.
+		// Filter out records from non-leak buckets as a safety net.
+		// Even with bucket filtering in the search request, this guards against
+		// unexpected results (e.g. if the API ignores unknown bucket names).
+		var filteredRecords []intelxResultRecord
+		for _, record := range uniqueRecords {
+			if isIntelxWebBucket(record.Bucket) {
+				logger.Debugf("IntelX skipping record %s from web bucket %q", record.Name, record.Bucket)
+				continue
+			}
+			filteredRecords = append(filteredRecords, record)
+		}
+
+		logger.Debugf("IntelX %d records after bucket filtering (was %d)", len(filteredRecords), len(uniqueRecords))
+
+		// For each filtered record, fetch file contents and extract matching lines.
 		// Stop fetching if we hit a rate limit (402) — the API budget is exhausted.
 		rateLimited := false
-		for _, record := range uniqueRecords {
+		for _, record := range filteredRecords {
 			select {
 			case <-ctx.Done():
 				return
@@ -305,6 +333,15 @@ func (s *IntelX) fetchMatchingLines(ctx context.Context, session *Session, apiUR
 	}
 
 	return matches, http.StatusOK
+}
+
+// isIntelxWebBucket returns true if the bucket contains web-crawled content
+// rather than leaked credentials or paste data.
+func isIntelxWebBucket(bucket string) bool {
+	return strings.HasPrefix(bucket, "web.") ||
+		strings.HasPrefix(bucket, "news.") ||
+		strings.HasPrefix(bucket, "government.") ||
+		strings.HasPrefix(bucket, "whois.")
 }
 
 func (s *IntelX) terminateSearch(ctx context.Context, session *Session, apiURL, apiKey, searchID string) {
