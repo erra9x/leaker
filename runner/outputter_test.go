@@ -3,15 +3,20 @@ package runner
 import (
 	"bytes"
 	"errors"
+	"regexp"
+
+	"github.com/vflame6/leaker/logger"
 	"github.com/vflame6/leaker/runner/sources"
 	"strings"
 	"testing"
 )
 
+var ansiStripper = regexp.MustCompile(`\x1b\[[0-9;]*m`)
+
 func TestWritePlainResult_NotVerbose(t *testing.T) {
 	var buf bytes.Buffer
 	r := &sources.Result{Source: "leakcheck", Email: "user@example.com", Password: "password123"}
-	err := WritePlainResult(&buf, false, r)
+	err := WritePlainResult(&buf, false, false, r)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -29,14 +34,16 @@ func TestWritePlainResult_NotVerbose(t *testing.T) {
 
 func TestWritePlainResult_Verbose(t *testing.T) {
 	var buf bytes.Buffer
+	logger.SetNoColor(true)
+	defer logger.SetNoColor(false)
 	r := &sources.Result{Source: "proxynova", Email: "user@example.com", Password: "secret"}
-	err := WritePlainResult(&buf, true, r)
+	err := WritePlainResult(&buf, true, false, r)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	got := buf.String()
+	got := ansiStripper.ReplaceAllString(buf.String(), "")
 	if !strings.HasPrefix(got, "[proxynova] ") {
-		t.Errorf("expected verbose line with source prefix, got: %q", got)
+		t.Errorf("expected verbose line with source prefix, got: %q", buf.String())
 	}
 }
 
@@ -49,7 +56,7 @@ func (e *errWriter) Write(_ []byte) (int, error) {
 
 func TestWritePlainResult_PropagatesWriteError(t *testing.T) {
 	r := &sources.Result{Source: "src", Email: "test@test.com"}
-	err := WritePlainResult(&errWriter{}, false, r)
+	err := WritePlainResult(&errWriter{}, false, false, r)
 	if err == nil {
 		t.Error("expected error from failing writer, got nil")
 	}
@@ -58,7 +65,7 @@ func TestWritePlainResult_PropagatesWriteError(t *testing.T) {
 func TestWriteJSONResult_ValidOutput(t *testing.T) {
 	var buf bytes.Buffer
 	r := &sources.Result{Source: "leakcheck", Email: "user@example.com", Password: "abc"}
-	err := WriteJSONResult(&buf, r, "user@example.com")
+	err := WriteJSONResult(&buf, false, r, "user@example.com")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -83,7 +90,7 @@ func TestWriteJSONResult_ValidOutput(t *testing.T) {
 func TestWriteJSONResult_EscapesSpecialChars(t *testing.T) {
 	var buf bytes.Buffer
 	r := &sources.Result{Source: "src", Password: `value with "quotes" and \backslash`}
-	err := WriteJSONResult(&buf, r, "target")
+	err := WriteJSONResult(&buf, false, r, "target")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
