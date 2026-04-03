@@ -87,6 +87,56 @@ func TestWriteJSONResult_ValidOutput(t *testing.T) {
 	}
 }
 
+func TestWritePlainResult_IncludeMetadata(t *testing.T) {
+	var buf bytes.Buffer
+	r := &sources.Result{Source: "leakcheck", Email: "user@example.com", Password: "abc", Database: "Canva.com"}
+	err := WritePlainResult(&buf, false, true, r)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := buf.String()
+	if !strings.Contains(got, "database:Canva.com") {
+		t.Errorf("expected database field with metadata flag, got: %q", got)
+	}
+}
+
+func TestWritePlainResult_NoMetadataByDefault(t *testing.T) {
+	var buf bytes.Buffer
+	r := &sources.Result{Source: "leakcheck", Email: "user@example.com", Password: "abc", Database: "Canva.com"}
+	err := WritePlainResult(&buf, false, false, r)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	got := buf.String()
+	if strings.Contains(got, "database") {
+		t.Errorf("database should not appear without metadata flag, got: %q", got)
+	}
+}
+
+func TestWriteJSONResult_IncludeMetadata(t *testing.T) {
+	var buf bytes.Buffer
+	r := &sources.Result{Source: "leakcheck", Email: "user@example.com", Database: "Canva.com"}
+	err := WriteJSONResult(&buf, true, r, "user@example.com")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(buf.String(), `"database":"Canva.com"`) {
+		t.Errorf("expected database in JSON with metadata flag, got: %q", buf.String())
+	}
+}
+
+func TestWriteJSONResult_NoMetadataByDefault(t *testing.T) {
+	var buf bytes.Buffer
+	r := &sources.Result{Source: "leakcheck", Email: "user@example.com", Database: "Canva.com"}
+	err := WriteJSONResult(&buf, false, r, "user@example.com")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if strings.Contains(buf.String(), `"database"`) {
+		t.Errorf("database should not appear in JSON without metadata flag, got: %q", buf.String())
+	}
+}
+
 func TestWriteJSONResult_EscapesSpecialChars(t *testing.T) {
 	var buf bytes.Buffer
 	r := &sources.Result{Source: "src", Password: `value with "quotes" and \backslash`}
