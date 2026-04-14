@@ -65,7 +65,7 @@ var CLI struct {
 func Run() {
 	parser, err := kong.New(&CLI,
 		kong.Name("leaker"),
-		kong.Description("leaker is a leak discovery tool that returns valid credential leaks for emails, using passive online sources."),
+		kong.Description("leaker is a leak discovery tool that returns valid credential leaks using passive online sources across email, username, domain, keyword, and phone targets."),
 		kong.ConfigureHelp(kong.HelpOptions{
 			Compact: true,
 			Summary: true,

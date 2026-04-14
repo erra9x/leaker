@@ -67,7 +67,7 @@ This will display help for the tool. Here are all the switches it supports.
 ```yaml
 Usage: leaker <command> [flags]
 
-  leaker is a leak discovery tool that returns valid credential leaks for emails, using passive online sources.
+  leaker is a leak discovery tool that returns valid credential leaks using passive online sources across email, username, domain, keyword, and phone targets.
 
 Flags:
   -h, --help                                     Show context-sensitive help.
@@ -122,6 +122,24 @@ Learn about more ways to install leaker here: https://github.com/vflame6/leaker/
 ### Running Leaker
 
 Learn about how to run Leaker here: https://github.com/vflame6/leaker/wiki/Running
+
+## Testing
+
+The passive-search smoke test lives in `runner/runner_smoke_test.go`. It exercises the main email enumeration flow with a stub source so basic runner output stays covered even when external providers change.
+
+Run the full Go test suite:
+
+```shell
+go test ./...
+```
+
+Run just the smoke test when touching the runner/output path:
+
+```shell
+go test ./runner -run TestRunEnumeration_SmokePassiveEmailFlow -v
+```
+
+If you are preparing a release tag, run the tests locally first. The current release workflow publishes tagged builds, but it does not add extra smoke-test-specific steps on its own.
 
 ## Contributing
 
