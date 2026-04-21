@@ -48,7 +48,7 @@ func sorted(items []string) []string {
 func TestReadmeMatchesLiveSearchTypesAndSources(t *testing.T) {
 	readme := readmeText(t)
 	help := runLeaker(t, "--help")
-	sourcesOutput := runLeaker(t, "--list-sources")
+	sourcesOutput := runLeaker(t, "--list-sources", "--quiet", "--no-color")
 
 	commandRe := regexp.MustCompile(`(?m)^\s+(domain|email|keyword|phone|username)\s+Search by .+$`)
 	matches := commandRe.FindAllStringSubmatch(help, -1)
@@ -67,6 +67,9 @@ func TestReadmeMatchesLiveSearchTypesAndSources(t *testing.T) {
 	}
 
 	sourceLineRe := regexp.MustCompile(`(?m)^([a-z0-9]+)(?: \*)?$`)
+	if strings.Contains(sourcesOutput, "[INFO]") || strings.Contains(sourcesOutput, "\x1b[") {
+		t.Fatalf("script-friendly source listing regressed, got %q", sourcesOutput)
+	}
 	sourceMatches := sourceLineRe.FindAllStringSubmatch(sourcesOutput, -1)
 	liveSources := make([]string, 0, len(sourceMatches))
 	for _, m := range sourceMatches {
