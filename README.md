@@ -31,7 +31,7 @@ Created by Maksim Radaev/[@vflame6](https://github.com/vflame6)
 
 ## Features
 
-- **12 sources** - aggregates results from multiple leak databases
+- **13 sources** - aggregates results from multiple leak databases
 - **5 search types** - email, username, domain, keyword, phone
 - **Deduplication** - removes duplicate results across sources
 - **JSONL output** - structured output for pipelines (`-j`)
@@ -48,6 +48,7 @@ Created by Maksim Radaev/[@vflame6](https://github.com/vflame6)
 | [Hudson Rock](https://hudsonrock.com/) | No* | email, username, domain | Free / Paid         |
 | [Intelligence X](https://intelx.io/) | Yes | all | Free tier available |
 | [LeakCheck](https://leakcheck.io/?ref=486555) | Yes | email, username, domain, keyword, phone | Paid                |
+| [LeakRadar](https://leakradar.io/) | Yes | email, username, domain, keyword, phone | Paid                |
 | [Leak-Lookup](https://leak-lookup.com/) | Yes | email, username, domain, keyword, phone | Paid                |
 | [LeakSight](https://leaksight.com/) | Yes | email, username, domain, keyword, phone | Paid                |
 | [OSINTLeak](https://app.osintleak.com/auth/signup?referral_code=FLAME6) | Yes | email, username, domain, keyword, phone | Paid                |

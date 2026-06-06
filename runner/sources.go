@@ -11,6 +11,7 @@ var AllSources = [...]sources.Source{
 	&sources.HudsonRock{},
 	&sources.IntelX{},
 	&sources.LeakCheck{},
+	&sources.LeakRadar{},
 	&sources.LeakLookup{},
 	&sources.LeakSight{},
 	&sources.LocalDB{},
